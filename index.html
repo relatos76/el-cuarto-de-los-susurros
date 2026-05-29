@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>El cuarto de los susurros</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #080707;
+      color: #f3ead8;
+      font-family: Georgia, "Times New Roman", serif;
+      overflow: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .intro {
+      position: relative;
+      z-index: 5;
+      padding: 14px 18px 10px;
+      text-align: center;
+      background: linear-gradient(to bottom, rgba(8, 7, 7, 0.96), rgba(8, 7, 7, 0.72));
+      border-bottom: 1px solid rgba(243, 234, 216, 0.15);
+    }
+
+    .intro h1 {
+      margin: 0 0 4px;
+      font-size: clamp(22px, 4vw, 40px);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #f3ead8;
+    }
+
+    .intro p {
+      margin: 0;
+      font-size: clamp(14px, 2.1vw, 18px);
+      color: rgba(243, 234, 216, 0.82);
+    }
+
+    .hint {
+      margin-top: 6px;
+      font-size: 13px;
+      color: rgba(243, 234, 216, 0.6);
+    }
+
+    .explorer {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      cursor: grab;
+      scrollbar-color: rgba(139, 25, 35, 0.75) rgba(255, 255, 255, 0.08);
+      scrollbar-width: thin;
+    }
+
+    .explorer:active {
+      cursor: grabbing;
+    }
+
+    .room {
+      position: relative;
+      height: 100%;
+      min-width: 1500px;
+      aspect-ratio: 21 / 9;
+      background-image:
+        linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.25)),
+        url("assets/cuarto-susurros.webp");
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at center, rgba(0,0,0,0) 38%, rgba(0,0,0,0.55) 100%);
+      z-index: 1;
+    }
+
+    .hotspot {
+      position: absolute;
+      z-index: 2;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .hotspot::before {
+      content: "";
+      position: absolute;
+      inset: 18%;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(255, 229, 170, 0.34), rgba(139, 25, 35, 0.18) 38%, rgba(139, 25, 35, 0) 72%);
+      opacity: 0.28;
+      filter: blur(5px);
+      transform: scale(0.75);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .hotspot::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 12px;
+      height: 12px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: rgba(255, 229, 170, 0.75);
+      box-shadow: 0 0 18px rgba(255, 229, 170, 0.9);
+      opacity: 0.55;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .hotspot:hover::before,
+    .hotspot:focus-visible::before,
+    .hotspot.active::before {
+      opacity: 1;
+      transform: scale(1.08);
+    }
+
+    .hotspot:hover::after,
+    .hotspot:focus-visible::after,
+    .hotspot.active::after {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.35);
+    }
+
+    .label {
+      position: absolute;
+      left: 50%;
+      bottom: 100%;
+      transform: translateX(-50%) translateY(-10px);
+      width: max-content;
+      max-width: 230px;
+      padding: 8px 10px;
+      border: 1px solid rgba(243, 234, 216, 0.28);
+      background: rgba(12, 10, 10, 0.88);
+      color: #f3ead8;
+      font-size: 14px;
+      line-height: 1.25;
+      text-align: center;
+      border-radius: 10px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+
+    .hotspot:hover .label,
+    .hotspot:focus-visible .label,
+    .hotspot.active .label {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-16px);
+    }
+
+    .card {
+      position: absolute;
+      z-index: 10;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      width: min(92vw, 430px);
+      padding: 16px 16px 14px;
+      border: 1px solid rgba(243, 234, 216, 0.24);
+      border-radius: 16px;
+      background: rgba(10, 8, 8, 0.92);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.62);
+      backdrop-filter: blur(6px);
+      display: none;
+    }
+
+    .card.show {
+      display: block;
+    }
+
+    .card h2 {
+      margin: 0 0 7px;
+      font-size: 22px;
+      color: #f3ead8;
+    }
+
+    .card p {
+      margin: 0 0 13px;
+      font-size: 15px;
+      line-height: 1.45;
+      color: rgba(243, 234, 216, 0.82);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .enter {
+      display: inline-block;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: #8b1923;
+      color: #fff4e2;
+      text-decoration: none;
+      font-size: 14px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .close-card {
+      border: 0;
+      background: transparent;
+      color: rgba(243, 234, 216, 0.65);
+      cursor: pointer;
+      font-size: 14px;
+      text-decoration: underline;
+    }
+
+    .nav-btn {
+      position: absolute;
+      z-index: 12;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 42px;
+      height: 54px;
+      border: 1px solid rgba(243, 234, 216, 0.25);
+      border-radius: 999px;
+      background: rgba(8, 7, 7, 0.64);
+      color: #f3ead8;
+      font-size: 28px;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+    }
+
+    .nav-btn.left {
+      left: 12px;
+    }
+
+    .nav-btn.right {
+      right: 12px;
+    }
+
+    .nav-btn:hover {
+      background: rgba(139, 25, 35, 0.75);
+    }
+
+    /* Posiciones aproximadas. Luego las ajustamos según tu imagen exacta. */
+    .seat {
+      left: 9%;
+      top: 54%;
+      width: 18%;
+      height: 28%;
+    }
+
+    .lantern {
+      left: 32%;
+      top: 66%;
+      width: 12%;
+      height: 20%;
+    }
+
+    .radio {
+      left: 47%;
+      top: 43%;
+      width: 12%;
+      height: 18%;
+    }
+
+    .phone {
+      left: 61%;
+      top: 42%;
+      width: 11%;
+      height: 20%;
+    }
+
+    .coat {
+      left: 74%;
+      top: 25%;
+      width: 10%;
+      height: 35%;
+    }
+
+    .mirror {
+      left: 84%;
+      top: 24%;
+      width: 12%;
+      height: 42%;
+    }
+
+    @media (max-width: 700px) {
+      .intro {
+        padding: 11px 12px 8px;
+      }
+
+      .intro h1 {
+        font-size: 20px;
+        letter-spacing: 0.06em;
+      }
+
+      .intro p {
+        font-size: 14px;
+      }
+
+      .hint {
+        font-size: 12px;
+      }
+
+      .room {
+        min-width: 1250px;
+      }
+
+      .card {
+        bottom: 14px;
+      }
+
+      .nav-btn {
+        width: 38px;
+        height: 48px;
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="intro">
+    <h1>El cuarto de los susurros</h1>
+    <p>Cada objeto abre una historia distinta.</p>
+    <div class="hint">Desliza, arrastra o usa las flechas. Cuando algo brille, acércate.</div>
+  </header>
+
+  <main class="explorer" id="explorer" aria-label="Explorar el cuarto de los susurros">
+    <section class="room" id="room">
+      <div class="vignette"></div>
+
+      <button
+        class="hotspot seat"
+        data-title="El asiento del último viaje"
+        data-desc="Relatos de rutas nocturnas, pasajeros extraños y viajes que no debían continuar."
+        data-url="https://relatosdeterror.carrd.co/#autobus-pasajeros"
+        aria-label="Abrir El asiento del último viaje">
+        <span class="label">El asiento del último viaje</span>
+      </button>
+
+      <button
+        class="hotspot lantern"
+        data-title="La linterna del vigilante"
+        data-desc="Turnos de madrugada, pasillos vacíos y cosas que aparecen cuando todos duermen."
+        data-url="https://relatosdeterror.carrd.co/#vigilantes-nocturnos"
+        aria-label="Abrir La linterna del vigilante">
+        <span class="label">La linterna del vigilante</span>
+      </button>
+
+      <button
+        class="hotspot radio"
+        data-title="La frecuencia muerta"
+        data-desc="Voces, estática y transmisiones que nadie recuerda haber enviado."
+        data-url="https://relatosdeterror.carrd.co/#radio"
+        aria-label="Abrir La frecuencia muerta">
+        <span class="label">La frecuencia muerta</span>
+      </button>
+
+      <button
+        class="hotspot phone"
+        data-title="El teléfono que aún suena"
+        data-desc="Llamadas imposibles, números olvidados y voces que contestan desde otro lugar."
+        data-url="https://relatosdeterror.carrd.co/#telefono-viejo"
+        aria-label="Abrir El teléfono que aún suena">
+        <span class="label">El teléfono que aún suena</span>
+      </button>
+
+      <button
+        class="hotspot coat"
+        data-title="El abrigo sin dueño"
+        data-desc="Historias donde el peligro no viene de lo sobrenatural, sino de alguien demasiado real."
+        data-url="https://relatosdeterror.carrd.co/#asesinos"
+        aria-label="Abrir El abrigo sin dueño">
+        <span class="label">El abrigo sin dueño</span>
+      </button>
+
+      <button
+        class="hotspot mirror"
+        data-title="El reflejo quebrado"
+        data-desc="Relatos de presencias, reflejos y cosas que aparecen detrás de quien mira."
+        data-url="https://relatosdeterror.carrd.co/#espejo-agrietado"
+        aria-label="Abrir El reflejo quebrado">
+        <span class="label">El reflejo quebrado</span>
+      </button>
+
+      <article class="card" id="card" aria-live="polite">
+        <h2 id="cardTitle">Título</h2>
+        <p id="cardDesc">Descripción</p>
+        <div class="card-actions">
+          <a class="enter" id="cardLink" href="#" target="_top">Entrar al relato</a>
+          <button class="close-card" id="closeCard">Cerrar</button>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <button class="nav-btn left" id="goLeft" aria-label="Mover hacia la izquierda">‹</button>
+  <button class="nav-btn right" id="goRight" aria-label="Mover hacia la derecha">›</button>
+
+  <script>
+    const explorer = document.getElementById("explorer");
+    const hotspots = document.querySelectorAll(".hotspot");
+    const card = document.getElementById("card");
+    const cardTitle = document.getElementById("cardTitle");
+    const cardDesc = document.getElementById("cardDesc");
+    const cardLink = document.getElementById("cardLink");
+    const closeCard = document.getElementById("closeCard");
+    const goLeft = document.getElementById("goLeft");
+    const goRight = document.getElementById("goRight");
+
+    function openCard(hotspot) {
+      hotspots.forEach(item => item.classList.remove("active"));
+      hotspot.classList.add("active");
+
+      cardTitle.textContent = hotspot.dataset.title;
+      cardDesc.textContent = hotspot.dataset.desc;
+      cardLink.href = hotspot.dataset.url;
+      card.classList.add("show");
+    }
+
+    hotspots.forEach(hotspot => {
+      hotspot.addEventListener("click", () => openCard(hotspot));
+      hotspot.addEventListener("focus", () => openCard(hotspot));
+    });
+
+    closeCard.addEventListener("click", () => {
+      card.classList.remove("show");
+      hotspots.forEach(item => item.classList.remove("active"));
+    });
+
+    goLeft.addEventListener("click", () => {
+      explorer.scrollBy({ left: -420, behavior: "smooth" });
+    });
+
+    goRight.addEventListener("click", () => {
+      explorer.scrollBy({ left: 420, behavior: "smooth" });
+    });
+
+    let isDown = false;
+    let startX = 0;
+    let scrollStart = 0;
+
+    explorer.addEventListener("pointerdown", (event) => {
+      if (event.target.closest(".hotspot") || event.target.closest(".card")) return;
+
+      isDown = true;
+      startX = event.pageX;
+      scrollStart = explorer.scrollLeft;
+      explorer.setPointerCapture(event.pointerId);
+    });
+
+    explorer.addEventListener("pointermove", (event) => {
+      if (!isDown) return;
+      const move = event.pageX - startX;
+      explorer.scrollLeft = scrollStart - move;
+    });
+
+    explorer.addEventListener("pointerup", () => {
+      isDown = false;
+    });
+
+    explorer.addEventListener("pointercancel", () => {
+      isDown = false;
+    });
+  </script>
+</body>
+</html>
