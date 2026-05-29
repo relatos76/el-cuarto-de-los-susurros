@@ -174,21 +174,19 @@
     }
 
     .card {
-      position: absolute;
-      z-index: 10;
-      left: 50%;
-      bottom: 22px;
-      transform: translateX(-50%);
-      width: min(92vw, 430px);
-      padding: 16px 16px 14px;
-      border: 1px solid rgba(243, 234, 216, 0.24);
-      border-radius: 16px;
-      background: rgba(10, 8, 8, 0.92);
-      box-shadow: 0 18px 40px rgba(0,0,0,0.62);
-      backdrop-filter: blur(6px);
-      display: none;
-    }
-
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  top: 0;
+  width: min(92vw, 430px);
+  padding: 16px 16px 14px;
+  border: 1px solid rgba(243, 234, 216, 0.24);
+  border-radius: 16px;
+  background: rgba(10, 8, 8, 0.92);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.62);
+  backdrop-filter: blur(6px);
+  display: none;
+}
     .card.show {
       display: block;
     }
@@ -420,8 +418,9 @@
   <button class="nav-btn right" id="goRight" aria-label="Mover hacia la derecha">›</button>
 
   <script>
-    const explorer = document.getElementById("explorer");
-    const hotspots = document.querySelectorAll(".hotspot");
+   const explorer = document.getElementById("explorer");
+const room = document.getElementById("room");
+const hotspots = document.querySelectorAll(".hotspot");
     const card = document.getElementById("card");
     const cardTitle = document.getElementById("cardTitle");
     const cardDesc = document.getElementById("cardDesc");
@@ -430,15 +429,39 @@
     const goLeft = document.getElementById("goLeft");
     const goRight = document.getElementById("goRight");
 
-    function openCard(hotspot) {
-      hotspots.forEach(item => item.classList.remove("active"));
-      hotspot.classList.add("active");
+  function openCard(hotspot) {
+  hotspots.forEach(item => item.classList.remove("active"));
+  hotspot.classList.add("active");
 
-      cardTitle.textContent = hotspot.dataset.title;
-      cardDesc.textContent = hotspot.dataset.desc;
-      cardLink.href = hotspot.dataset.url;
-      card.classList.add("show");
+  cardTitle.textContent = hotspot.dataset.title;
+  cardDesc.textContent = hotspot.dataset.desc;
+  cardLink.href = hotspot.dataset.url;
+
+  card.classList.add("show");
+
+  requestAnimationFrame(() => {
+    const roomWidth = room.offsetWidth;
+    const roomHeight = room.offsetHeight;
+
+    const cardWidth = card.offsetWidth;
+    const cardHeight = card.offsetHeight;
+
+    const hotspotCenterX = hotspot.offsetLeft + hotspot.offsetWidth / 2;
+
+    let x = hotspotCenterX - cardWidth / 2;
+    let y = hotspot.offsetTop + hotspot.offsetHeight + 14;
+
+    if (y + cardHeight > roomHeight - 14) {
+      y = hotspot.offsetTop - cardHeight - 14;
     }
+
+    x = Math.max(14, Math.min(x, roomWidth - cardWidth - 14));
+    y = Math.max(14, Math.min(y, roomHeight - cardHeight - 14));
+
+    card.style.left = `${x}px`;
+    card.style.top = `${y}px`;
+  });
+}
 
     hotspots.forEach(hotspot => {
       hotspot.addEventListener("click", () => openCard(hotspot));
